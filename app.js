@@ -130,8 +130,44 @@ function profile(record) {
   return article;
 }
 
+function populateDropdown(key, select, other) {
+  const query = document.getElementById(`${key}-search`).value.trim().toLowerCase();
+  const choices = records.map((record, index) => ({ name: record.name, value: String(index), number: record.pokedex_number.padStart(3, '0') }));
+  if (key === 'secondary') choices.unshift({ name: 'No comparison', value: '', number: '—' });
+  const options = choices.filter(choice => choice.name.toLowerCase().includes(query));
+  const buttons = options.map(choice => {
+    const button = element('button', 'dropdown-option', `${choice.number}  ${choice.name}`);
+    button.type = 'button';
+    button.disabled = choice.value !== '' && choice.value === other.value;
+    button.classList.toggle('is-selected', choice.value === select.value);
+    button.setAttribute('aria-pressed', String(choice.value === select.value));
+    button.addEventListener('click', () => {
+      select.value = choice.value;
+      closeDropdown(key);
+      render();
+      document.getElementById(`${key}-toggle`).focus();
+    });
+    return button;
+  });
+  document.getElementById(`${key}-options`).replaceChildren(...(buttons.length ? buttons : [element('p', 'dropdown-empty', 'No Pokémon found.')]));
+}
+
+function closeDropdown(key) {
+  document.getElementById(`${key}-menu`).hidden = true;
+  document.getElementById(`${key}-toggle`).setAttribute('aria-expanded', 'false');
+}
+
+function updateSearchSuggestions() {
+  for (const [key, select, other] of [['primary', primary, secondary], ['secondary', secondary, primary]]) {
+    document.getElementById(`${key}-toggle`).firstElementChild.textContent = select.value === '' ? 'No comparison' : records[Number(select.value)].name;
+    populateDropdown(key, select, other);
+  }
+}
+
 function render() {
   const selected = selectedRecords();
+  updateSearchSuggestions();
+  document.getElementById('workspace').classList.toggle('is-comparing', selected.length === 2);
   document.getElementById('profiles').replaceChildren(...selected.map(profile));
   document.getElementById('legend').replaceChildren(...selected.map((record, index) => {
     const label = element('span', '', record.name);
@@ -205,6 +241,7 @@ async function initialize() {
     secondary.replaceChildren(noComparison, ...options.map(option => option.cloneNode(true)));
     primary.value = String(Math.max(0, records.findIndex(record => record.name === 'Bulbasaur')));
     primary.disabled = secondary.disabled = false;
+    document.querySelectorAll('.dropdown-toggle').forEach(button => { button.disabled = false; });
     document.getElementById('record-count').textContent = `${records.length} RECORDS`;
     document.querySelector('footer > span').textContent = `${records.length} RECORDS. ENDLESS MATCHUPS.`;
     document.getElementById('status').hidden = true;
@@ -216,6 +253,51 @@ async function initialize() {
   }
 }
 
+for (const [key, select, other] of [['primary', primary, secondary], ['secondary', secondary, primary]]) {
+  const input = document.getElementById(`${key}-search`);
+  const toggle = document.getElementById(`${key}-toggle`);
+  const menu = document.getElementById(`${key}-menu`);
+  toggle.addEventListener('click', () => {
+    const opening = menu.hidden;
+    closeDropdown('primary');
+    closeDropdown('secondary');
+    if (opening) {
+      input.value = '';
+      populateDropdown(key, select, other);
+      menu.hidden = false;
+      toggle.setAttribute('aria-expanded', 'true');
+      input.focus();
+    }
+  });
+  input.addEventListener('input', () => populateDropdown(key, select, other));
+  document.getElementById(`${key}-dropdown`).addEventListener('keydown', event => {
+    if (event.key === 'Escape') {
+      closeDropdown(key);
+      toggle.focus();
+    } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      if (menu.hidden) return;
+      const buttons = [...menu.querySelectorAll('.dropdown-option:not(:disabled)')];
+      const index = buttons.indexOf(document.activeElement);
+      const next = event.key === 'ArrowDown' ? index + 1 : index < 0 ? buttons.length - 1 : index - 1;
+      if (buttons.length) buttons[(next + buttons.length) % buttons.length].focus();
+      event.preventDefault();
+    } else if (event.key === 'Enter' && event.target === input) {
+      menu.querySelector('.dropdown-option:not(:disabled)')?.click();
+      event.preventDefault();
+    }
+  });
+}
+document.addEventListener('click', event => {
+  if (!event.target.closest('.pokemon-dropdown')) {
+    closeDropdown('primary');
+    closeDropdown('secondary');
+  }
+});
+document.addEventListener('focusin', event => {
+  for (const key of ['primary', 'secondary']) {
+    if (!document.getElementById(`${key}-dropdown`).contains(event.target)) closeDropdown(key);
+  }
+});
 primary.addEventListener('change', render);
 secondary.addEventListener('change', render);
 ['radar', 'bar'].forEach(type => {

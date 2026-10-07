@@ -6,9 +6,9 @@
   <meta name="description" content="Explore and compare the base stats of 801 Pokémon in a retro Pokédex.">
   <title>Pokédex · Field companion</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23c63245'/%3E%3Ccircle cx='16' cy='16' r='10' fill='%23f5f1df' stroke='%23242e2b' stroke-width='2'/%3E%3Cpath d='M6 16h20' stroke='%23242e2b' stroke-width='3'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%23f5f1df' stroke='%23242e2b' stroke-width='2'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="styles.css?v=20261007-2">
+  <link rel="stylesheet" href="styles.css?v=20261007-6">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js" defer></script>
-  <script src="app.js?v=20261007-2" defer></script>
+  <script src="app.js?v=20261007-6" defer></script>
 </head>
 <body>
   <main class="device">
@@ -20,8 +20,8 @@
       <section class="selection-panel" aria-label="Pokémon selection">
         <div class="section-label"><span>01 / SELECT YOUR POKÉMON</span><span id="record-count">READING DATA…</span></div>
         <div class="selectors">
-          <div class="select-field"><label for="primary">Pokémon <span class="color-key primary-key"></span></label><select id="primary" disabled><option>Loading Pokédex…</option></select></div>
-          <div class="select-field"><label for="secondary">Compare with <span class="optional">optional</span><span class="color-key secondary-key"></span></label><select id="secondary" disabled><option value="">No comparison</option></select></div>
+          <div class="select-field"><label for="primary-toggle">Pokémon <span class="color-key primary-key"></span></label><div class="pokemon-dropdown" id="primary-dropdown"><button type="button" class="dropdown-toggle" id="primary-toggle" aria-expanded="false" aria-controls="primary-menu" disabled><span>Loading Pokédex…</span><span aria-hidden="true">▼</span></button><div class="dropdown-menu" id="primary-menu" hidden><input id="primary-search" class="pokemon-search" type="search" placeholder="Search Pokémon…" aria-label="Search Pokémon" autocomplete="off"><div class="dropdown-options" id="primary-options" role="group" aria-label="Pokémon choices"></div></div></div><select id="primary" hidden disabled><option>Loading Pokédex…</option></select></div>
+          <div class="select-field"><label for="secondary-toggle">Compare with <span class="optional">optional</span><span class="color-key secondary-key"></span></label><div class="pokemon-dropdown" id="secondary-dropdown"><button type="button" class="dropdown-toggle" id="secondary-toggle" aria-expanded="false" aria-controls="secondary-menu" disabled><span>Loading Pokédex…</span><span aria-hidden="true">▼</span></button><div class="dropdown-menu" id="secondary-menu" hidden><input id="secondary-search" class="pokemon-search" type="search" placeholder="Search Pokémon…" aria-label="Search comparison Pokémon" autocomplete="off"><div class="dropdown-options" id="secondary-options" role="group" aria-label="Pokémon choices"></div></div></div><select id="secondary" hidden disabled><option value="">No comparison</option></select></div>
         </div>
       </section>
       <p id="status" role="status">Loading Pokémon records…</p>
