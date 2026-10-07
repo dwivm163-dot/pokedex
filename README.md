@@ -14,7 +14,7 @@ Open http://localhost:8000. A web server is required because the app loads the C
 
 Select a Pokémon, optionally select a comparison Pokémon, and use Radar or Bar to change the chart. Choose “No comparison” to return to a single record. The table always shows exact stat values, and both charts use the same 0–255 scale.
 
-Both profiles display local artwork from `images/`. Filenames match normalized Pokémon names, with explicit mappings in `app.js` for names with symbols and form-specific filenames. All 801 stats records have a matching image. Form-specific artwork uses the supplied image; stats continue to come from `pokemon.csv`. The accompanying `images/pokemon-images.csv` has names, types, and evolutions, but no image-path column. Missing or failed images display “Image unavailable” while the profile and charts remain usable.
+Both profiles fetch images from [PokéAPI](https://pokeapi.co/docs/v2#pokemon) using async functions and `fetch()`. The national Pokédex number selects the default Pokémon sprite; pixel sprites are preferred, with official artwork as a fallback. Requests are cached in memory for the session. Loading and unavailable-image messages keep the stats usable if an API or image request fails. Images require internet access; no local image directory is needed. All stats still come from `pokemon.csv`.
 
 ## Dataset mapping
 

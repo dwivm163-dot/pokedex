@@ -10,22 +10,48 @@ const STATS = [
   { key: 'speed', label: 'Speed' }
 ];
 const COLORS = ['#e72c39', '#4858e8'];
-// Explicit matches for the actual filenames supplied in images/.
-// Form-specific artwork uses the available file; stats remain from pokemon.csv.
-const IMAGE_NAMES = {
-  'Nidoran♀': 'nidoran-f', 'Nidoran♂': 'nidoran-m', "Farfetch'd": 'farfetchd',
-  Deoxys: 'deoxys-normal', Wormadam: 'wormadam-plant', Giratina: 'giratina-altered',
-  Shaymin: 'shaymin-land', Basculin: 'basculin-red-striped', Darmanitan: 'darmanitan-standard',
-  Tornadus: 'tornadus-incarnate', Thundurus: 'thundurus-incarnate', Landorus: 'landorus-incarnate',
-  Keldeo: 'keldeo-ordinary', Meloetta: 'meloetta-aria', Meowstic: 'meowstic-male',
-  Aegislash: 'aegislash-blade', Pumpkaboo: 'pumpkaboo-average', Gourgeist: 'gourgeist-average',
-  Zygarde: 'zygarde-50', Hoopa: 'hoopa-confined', Oricorio: 'oricorio-baile',
-  Lycanroc: 'lycanroc-midday', Wishiwashi: 'wishiwashi-solo', Minior: 'minior-meteor'
-};
+// Cache sprite requests so changing chart type or revisiting a record avoids extra API calls.
+const spriteRequests = new Map();
 
-function pokemonImagePath(name) {
-  const filename = IMAGE_NAMES[name] || name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-  return `images/${filename}.png`;
+async function fetchPokemonSprite(id) {
+  const key = String(Number(id));
+  if (!spriteRequests.has(key)) {
+    const request = (async () => {
+      const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${key}/`);
+      if (!response.ok) throw new Error(`PokéAPI request failed: ${response.status}`);
+      const pokemon = await response.json();
+      // Prefer pixel sprites to match the handheld interface.
+      const url = pokemon.sprites?.front_default
+        || pokemon.sprites?.other?.['official-artwork']?.front_default;
+      if (!url) throw new Error('No sprite available');
+      return url;
+    })();
+    spriteRequests.set(key, request);
+    request.catch(() => spriteRequests.delete(key));
+  }
+  return spriteRequests.get(key);
+}
+
+async function loadPokemonArtwork(record, artwork) {
+  const loading = element('p', 'image-unavailable', 'Loading image…');
+  loading.setAttribute('role', 'status');
+  artwork.append(loading);
+  try {
+    const url = await fetchPokemonSprite(record.pokedex_number);
+    const image = element('img', 'pokemon-image');
+    image.alt = record.name;
+    image.width = 192;
+    image.height = 192;
+    image.decoding = 'async';
+    image.addEventListener('error', () => {
+      artwork.replaceChildren(element('p', 'image-unavailable', 'Image unavailable'));
+    }, { once: true });
+    image.src = url;
+    // Each request updates only its own profile, even after a quick selection change.
+    artwork.replaceChildren(image);
+  } catch (error) {
+    artwork.replaceChildren(element('p', 'image-unavailable', 'Image unavailable'));
+  }
 }
 let records = [];
 let chart;
@@ -81,16 +107,7 @@ function profile(record) {
   const article = element('article', 'pokemon-profile');
   article.append(element('p', 'record-id', `NO. ${record.pokedex_number.padStart(3, '0')}`), element('h2', '', record.name), element('p', 'classification', record.classfication || 'Unknown classification'));
   const artwork = element('div', 'pokemon-artwork');
-  const image = element('img', 'pokemon-image');
-  image.alt = record.name;
-  image.width = 180;
-  image.height = 180;
-  image.decoding = 'async';
-  image.addEventListener('error', () => {
-    artwork.replaceChildren(element('p', 'image-unavailable', 'Image unavailable'));
-  }, { once: true });
-  image.src = pokemonImagePath(record.name);
-  artwork.append(image);
+  loadPokemonArtwork(record, artwork);
   article.append(artwork);
   const types = element('div', 'types');
   [record.type1, record.type2].filter(Boolean).forEach(type => types.append(element('span', 'type', type)));
