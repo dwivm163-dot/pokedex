@@ -9,7 +9,7 @@ const STATS = [
   { key: 'sp_defense', label: 'Special Defense' },
   { key: 'speed', label: 'Speed' }
 ];
-const COLORS = ['#345f45', '#b16b30'];
+const COLORS = ['#e72c39', '#4858e8'];
 // Explicit matches for the actual filenames supplied in images/.
 // Form-specific artwork uses the available file; stats remain from pokemon.csv.
 const IMAGE_NAMES = {
@@ -165,7 +165,7 @@ function renderChart(selected) {
       animation: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? false : { duration: 250 },
       plugins: { legend: { display: false }, tooltip: { backgroundColor: '#26392f', padding: 12 } },
       scales: radar ? {
-        r: { min: 0, max: 255, ticks: { stepSize: 51, display: false }, grid: { color: '#d2d9c7' }, angleLines: { color: '#d2d9c7' }, pointLabels: { color: '#53634d', font: { family: 'monospace', size: 12 } } }
+        r: { min: 0, max: 255, ticks: { stepSize: 51, display: false }, grid: { color: '#d2d9c7' }, angleLines: { color: '#d2d9c7' }, pointLabels: { color: '#53634d', font: { family: 'VT323, monospace', size: 20 } } }
       } : {
         y: { min: 0, max: 255, ticks: { stepSize: 51, color: '#53634d' }, grid: { color: '#dce0d3' } },
         x: { grid: { display: false }, ticks: { color: '#53634d', font: { size: 11 }, callback(value) { return ['HP', 'Attack', 'Defense', 'Sp. Atk', 'Sp. Def', 'Speed'][value]; } } }
